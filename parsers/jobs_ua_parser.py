@@ -1,2 +1,0 @@
-class AvitoRuParser(object):
-    pass

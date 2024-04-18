@@ -3,8 +3,6 @@
 **Created for educational purposes**
 
 > Application for job search by parsing popular websites.
-> 
-> Implemented parser only for  [Work.ua].
 
 ## Tech
 

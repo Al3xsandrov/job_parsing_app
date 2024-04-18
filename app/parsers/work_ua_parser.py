@@ -5,15 +5,22 @@ import random
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
-from parsers.parser_error import ParserError
+from app.parsers.parser_error import ParserError
 from PyQt5.QtCore import QObject, pyqtSignal
 
 
 class WorkUaParser(QObject):
+    """Parser class for Work.ua website.
+
+    Attributes:
+        progress_updated (pyqtSignal): Signal emitted to update progress.
+        finished (pyqtSignal): Signal emitted when parsing is finished.
+    """
     progress_updated = pyqtSignal(str, int)
     finished = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the parser."""
         super().__init__()
         self.__url = "https://www.work.ua"
         self.__headers = {"User-Agent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, "
@@ -22,7 +29,18 @@ class WorkUaParser(QObject):
         self.__total_pages = 1
         self.count = None
 
-    def get_soup(self, url):
+    def get_soup(self, url: str) -> BeautifulSoup:
+        """Get BeautifulSoup object from the given URL.
+
+        Args:
+            url (str): The URL to fetch.
+
+        Returns:
+            BeautifulSoup: The BeautifulSoup object.
+
+        Raises:
+            ParserError: If an error occurs during request or parsing.
+        """
         try:
             req = requests.get(url, headers=self.__headers)
             req.raise_for_status()
@@ -34,7 +52,18 @@ class WorkUaParser(QObject):
         except Exception as e:
             raise ParserError("An unforeseen error occurred: " + str(e))
 
-    def get_job_num(self, job=""):
+    def get_job_num(self, job: str ="") -> str:
+        """Get the number of jobs available for the given job title.
+
+        Args:
+            job (str): The job title.
+
+        Returns:
+            str: The number of jobs available.
+
+        Raises:
+            ParserError: If there are no vacancies for the given request.
+        """
         if job != "":
             self.job = job
             url = f"{self.__url}/jobs-{self.job.replace(' ', '+')}/"
@@ -57,7 +86,15 @@ class WorkUaParser(QObject):
 
             return children[2].text.strip()
 
-    def get_total_pages(self, page):
+    def get_total_pages(self, page: BeautifulSoup) -> int:
+        """Get the total number of pages for pagination.
+
+        Args:
+            page (BeautifulSoup): The BeautifulSoup object of the page.
+
+        Returns:
+            int: The total number of pages.
+        """
         pages = page.find("ul", class_="pagination hidden-xs")
 
         if pages:
@@ -66,7 +103,8 @@ class WorkUaParser(QObject):
         else:
             return 1
 
-    def run_parse(self):
+    def run_parse(self) -> None:
+        """Run the parsing process."""
         job_list = []
         i = 0
 
@@ -96,7 +134,18 @@ class WorkUaParser(QObject):
         self.progress_updated.emit(f"File '{file_name}' is saved on the desktop.", progress)
         self.finished.emit()
 
-    def parse_job(self, url):
+    def parse_job(self, url: str) -> dict:
+        """Parse job details from the given URL.
+
+        Args:
+            url (str): The URL of the job details page.
+
+        Returns:
+            dict: A dictionary containing job details.
+
+        Raises:
+            ParserError: If an error occurs during parsing.
+        """
         try:
             soup = self.get_soup(url)
             name = soup.find('h1', class_='add-top-sm', id='h1-name').get_text()
@@ -126,7 +175,15 @@ class WorkUaParser(QObject):
         except Exception as e:
             raise ParserError("An error occurred while parsing the jobs: " + str(e))
 
-    def get_value(self, span):
+    def get_value(self, span: BeautifulSoup) -> str:
+        """Get the text value from the given BeautifulSoup span tag.
+
+        Args:
+            span (BeautifulSoup): The BeautifulSoup span tag.
+
+        Returns:
+            str: The text value.
+        """
         if span is not None:
             result = span.find_next_sibling().get_text()
         else:
